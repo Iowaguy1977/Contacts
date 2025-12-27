@@ -1,43 +1,145 @@
-﻿@page "/Add"
+﻿@page "/contacts"
+@page "/contacts/{Id:int}"
 @using Contacts.Models
 @inject IContactService ContactService
 @rendermode InteractiveServer
 
-<h3>Add Contact</h3>
+<h3>@(IsNew ? "Add Contact" : "Edit Contact")</h3>
 
-<EditForm FormName="AddContactForm"
-          EditContext="@editContext"
-          OnValidSubmit="@Save">
+<EditForm EditContext="@editContext" OnValidSubmit="@Save">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <InputText @bind-Value="contact.FirstName" placeholder="First Name" />
-    <InputText @bind-Value="contact.LastName" placeholder="Last Name" />
-    <InputText @bind-Value="contact.Address" placeholder="Address" />
-    <InputText @bind-Value="contact.Address2" placeholder="Address 2" />
-    <InputText @bind-Value="contact.PhoneNumber" placeholder="Phone" />
-    <InputText @bind-Value="contact.PhoneNumber2" placeholder="Phone 2" />
-    <InputText @bind-Value="contact.EmailAddress" placeholder="Email" />
-    <InputText @bind-Value="contact.EmailAddress2" placeholder="Email 2" />
+    <InputText @bind-Value="contact.FirstName" placeholder="First Name" class="form-control mb-2" />
+    <InputText @bind-Value="contact.LastName" placeholder="Last Name" class="form-control mb-2" />
+    <InputText @bind-Value="contact.Address" placeholder="Address" class="form-control mb-2" />
+    <InputText @bind-Value="contact.Address2" placeholder="Address 2" class="form-control mb-2" />
+    <InputText @bind-Value="contact.PhoneNumber" placeholder="Phone" class="form-control mb-2" />
+    <InputText @bind-Value="contact.PhoneNumber2" placeholder="Phone 2" class="form-control mb-2" />
+    <InputText @bind-Value="contact.EmailAddress" placeholder="Email" class="form-control mb-2" />
+    <InputText @bind-Value="contact.EmailAddress2" placeholder="Email 2" class="form-control mb-2" />
 
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="submit" class="btn btn-primary">@((IsNew) ? "Save" : "Update")</button>
+    @if (!IsNew)
+    {
+        <button type="button" class="btn btn-danger ms-2" @onclick="Delete">Delete</button>
+    }
 </EditForm>
+
+<hr />
+
+<h4>Existing Contacts</h4>
+@if (contacts == null || contacts.Count == 0)
+{
+    <p>No contacts yet.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in contacts)
+            {
+                <tr>
+                    <td>@c.FirstName @c.LastName</td>
+                    <td>@c.EmailAddress</td>
+                    <td>@c.PhoneNumber</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-1" @onclick="() => EditContact(c.Id)">Edit</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => DeleteContact(c.Id)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
 @code {
+    [Parameter]
+    public int Id { get; set; } = 0; // Optional Id parameter for editing
+
+    private List<Contact> contacts = new();
     private Contact contact = new();
     private EditContext editContext = default!;
+    private bool IsNew => contact.Id == 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         editContext = new EditContext(contact);
+        await LoadContacts();
+
+        // If navigating with Id in URL, load contact for editing
+        if (Id != 0)
+        {
+            await LoadContact(Id);
+        }
+    }
+
+    private async Task LoadContacts()
+    {
+        contacts = await ContactService.GetAllAsync();
+    }
+
+    private async Task LoadContact(int id)
+    {
+        var existing = await ContactService.GetByIdAsync(id);
+        if (existing != null)
+        {
+            contact = existing;
+            editContext = new EditContext(contact);
+        }
     }
 
     private async Task Save()
     {
-        await ContactService.AddAsync(contact);
+        if (IsNew)
+        {
+            await ContactService.AddAsync(contact);
+        }
+        else
+        {
+            await ContactService.UpdateAsync(contact);
+        }
 
         contact = new Contact();
-        editContext = new EditContext(contact); // 🔥 THIS FIXES VALIDATION
+        editContext = new EditContext(contact);
+        await LoadContacts();
+    }
+
+    private async Task EditContact(int id)
+    {
+        await LoadContact(id);
+    }
+
+    private async Task DeleteContact(int id)
+    {
+        await ContactService.DeleteAsync(id);
+
+        // If the deleted contact is currently loaded in the form, reset the form
+        if (contact.Id == id)
+        {
+            contact = new Contact();
+            editContext = new EditContext(contact);
+        }
+
+        await LoadContacts();
+    }
+
+    private async Task Delete()
+    {
+        if (!IsNew)
+        {
+            await ContactService.DeleteAsync(contact.Id);
+            contact = new Contact();
+            editContext = new EditContext(contact);
+            await LoadContacts();
+        }
     }
 }
-
-

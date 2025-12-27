@@ -13,6 +13,7 @@ namespace Contacts
             _context = context;
         }
 
+
         public async Task AddAsync(Contact contact)
         {
             Console.WriteLine($"Adding Contact: {contact.FirstName}, {contact.LastName}, {contact.EmailAddress}");
