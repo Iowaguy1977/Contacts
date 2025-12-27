@@ -1,0 +1,43 @@
+﻿@page "/Add"
+@using Contacts.Models
+@inject IContactService ContactService
+@rendermode InteractiveServer
+
+<h3>Add Contact</h3>
+
+<EditForm FormName="AddContactForm"
+          EditContext="@editContext"
+          OnValidSubmit="@Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="contact.FirstName" placeholder="First Name" />
+    <InputText @bind-Value="contact.LastName" placeholder="Last Name" />
+    <InputText @bind-Value="contact.Address" placeholder="Address" />
+    <InputText @bind-Value="contact.Address2" placeholder="Address 2" />
+    <InputText @bind-Value="contact.PhoneNumber" placeholder="Phone" />
+    <InputText @bind-Value="contact.PhoneNumber2" placeholder="Phone 2" />
+    <InputText @bind-Value="contact.EmailAddress" placeholder="Email" />
+    <InputText @bind-Value="contact.EmailAddress2" placeholder="Email 2" />
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</EditForm>
+@code {
+    private Contact contact = new();
+    private EditContext editContext = default!;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(contact);
+    }
+
+    private async Task Save()
+    {
+        await ContactService.AddAsync(contact);
+
+        contact = new Contact();
+        editContext = new EditContext(contact); // 🔥 THIS FIXES VALIDATION
+    }
+}
+
+
