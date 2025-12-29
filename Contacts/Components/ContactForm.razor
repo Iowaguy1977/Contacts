@@ -1,0 +1,69 @@
+﻿@using Contacts.Models
+@using Contacts.Services
+@inject IContactService ContactService
+@rendermode InteractiveServer
+
+<h3>@(IsNew ? "Add Contact" : "Edit Contact")</h3>
+
+<EditForm EditContext="@editContext" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText @bind-Value="Contact.FirstName" placeholder="First Name" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.LastName" placeholder="Last Name" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.Address" placeholder="Address" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.Address2" placeholder="Address 2" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.PhoneNumber" placeholder="Phone" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.PhoneNumber2" placeholder="Phone 2" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.EmailAddress" placeholder="Email" class="form-control mb-2" />
+    <InputText @bind-Value="Contact.EmailAddress2" placeholder="Email 2" class="form-control mb-2" />
+
+    <button type="submit" class="btn btn-primary">
+        @(IsNew ? "Save" : "Update")
+    </button>
+
+    @if (!IsNew)
+    {
+        <button type="button" class="btn btn-danger ms-2" @onclick="Delete">
+            Delete
+        </button>
+    }
+</EditForm>
+
+@code {
+    [Parameter, EditorRequired]
+    public Contact Contact { get; set; } = new();
+
+    [Parameter]
+    public EventCallback OnSaved { get; set; }
+
+    [Parameter]
+    public EventCallback OnDeleted { get; set; }
+
+    private EditContext editContext = default!;
+    private bool IsNew => Contact.Id == 0;
+
+    protected override void OnParametersSet()
+    {
+        editContext = new EditContext(Contact);
+    }
+
+    private async Task Save()
+    {
+        if (IsNew)
+            await ContactService.AddAsync(Contact);
+        else
+            await ContactService.UpdateAsync(Contact);
+
+        await OnSaved.InvokeAsync();
+    }
+
+    private async Task Delete()
+    {
+        if (!IsNew)
+        {
+            await ContactService.DeleteAsync(Contact.Id);
+            await OnDeleted.InvokeAsync();
+        }
+    }
+}

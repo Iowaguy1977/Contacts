@@ -1,4 +1,4 @@
-﻿namespace Contacts
+﻿namespace Contacts.Models
 {
     public class LoginModel
     {

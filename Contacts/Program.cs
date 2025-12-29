@@ -1,16 +1,17 @@
-using Contacts;
 using Contacts.Data;
 using Microsoft.EntityFrameworkCore;
 using Contacts.Components;
-using Contacts.Components.Pages;
+using Contacts.Pages;
 using Contacts.Models;
+using Contacts.Services;
+using Contacts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(); 
-builder.Services.AddScoped<Contacts.SqlConnectionService>();
+builder.Services.AddScoped<SqlConnectionService>();
 builder.Services.AddDbContext<ContactsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<IContactService, ContactService>();

@@ -2,7 +2,7 @@
 using Contacts.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Contacts
+namespace Contacts.Services
 {
     public class ContactService : IContactService
     {
@@ -16,7 +16,7 @@ namespace Contacts
 
         public async Task AddAsync(Contact contact)
         {
-            Console.WriteLine($"Adding Contact: {contact.FirstName}, {contact.LastName}, {contact.EmailAddress}");
+           
             _context.Contacts.Add(contact);
             await _context.SaveChangesAsync();
         }

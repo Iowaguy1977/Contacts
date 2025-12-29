@@ -1,6 +1,6 @@
 ﻿using Contacts.Models;
 
-namespace Contacts
+namespace Contacts.Services
 {
     public interface IContactService
     {
